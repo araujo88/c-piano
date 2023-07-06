@@ -110,13 +110,13 @@ int main()
 {
     char key;
     params parameters;
+    pthread_t t;
 
     // Set the terminal to raw mode
     set_mode(1);
 
     while (1)
     {
-        pthread_t t;
         if (!read(STDIN_FILENO, &key, 1))
             break;
 
