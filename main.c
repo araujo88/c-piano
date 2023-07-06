@@ -19,25 +19,26 @@ struct note
 {
     char key;
     float frequency;
+    char *mkey;
 };
 
 struct note keyboard[] = {
-    {'a', 261.63}, // C4
-    {'w', 277.18}, // C#4
-    {'s', 293.66}, // D4
-    {'e', 311.13}, // D#4
-    {'d', 329.63}, // E4
-    {'f', 349.23}, // F4
-    {'t', 369.99}, // F#4
-    {'g', 392.00}, // G4
-    {'y', 415.30}, // G#4
-    {'h', 440.00}, // A4
-    {'u', 466.16}, // A#4
-    {'j', 493.88}, // B4
-    {'k', 523.25}  // C5
+    {'a', 261.63, "C4"},  // C4
+    {'w', 277.18, "C#4"}, // C#4
+    {'s', 293.66, "D4"},  // D4
+    {'e', 311.13, "D#4"}, // D#4
+    {'d', 329.63, "E4"},  // E4
+    {'f', 349.23, "F4"},  // F4
+    {'t', 369.99, "F#4"}, // F#4
+    {'g', 392.00, "G4"},  // G4
+    {'y', 415.30, "G#4"}, // G#4
+    {'h', 440.00, "A4"},  // A4
+    {'u', 466.16, "A#4"}, // A#4
+    {'j', 493.88, "B4"},  // B4
+    {'k', 523.25, "C5"}   // C5
 };
 
-#define NUMBER_OF_NOTES (sizeof(keyboard) / sizeof(struct note))
+#define NUMBER_OF_NOTES (int)(sizeof(keyboard) / sizeof(struct note))
 
 // Function to set terminal to raw mode
 void set_mode(int want_key)
@@ -73,9 +74,15 @@ void *play_frequency(void *arg)
 
     for (int i = 0; i < size; i++)
     {
-        // buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+        // buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // basic sine wave
 
-        buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+        // buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
+
+        buf[i] = 0;
+        for (int k = 1; k < 20; k++)
+        {
+            buf[i] += VOLUME * (2 / M_PI) * pow(-1, k) * sin(2 * M_PI * k * freq * ((float)i / SAMPLING_RATE)) / k;
+        }
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
@@ -95,12 +102,13 @@ void *play_frequency(void *arg)
     }
 
     snd_pcm_close(handle);
+
+    return NULL;
 }
 
 int main()
 {
     char key;
-    int rc;
     params parameters;
 
     // Set the terminal to raw mode
@@ -118,8 +126,10 @@ int main()
             {
                 parameters.freq = keyboard[i].frequency;
                 parameters.duration = 0.25; // 250 ms
+                printf("key: %c - %s\n", key, keyboard[i].mkey);
             }
         }
+
         if (pthread_create(&t, NULL, &play_frequency, (void *)&parameters) != 0)
         {
             printf("\nError - pthread_create");
