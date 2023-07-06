@@ -12,7 +12,7 @@ a simple piano programmed in C
 
 # Running
 
-`./sin_wave`
+`./piano`
 
 # Notes mapping
 

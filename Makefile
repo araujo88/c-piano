@@ -1,2 +1,5 @@
 all:
-	gcc -o sine_wave main.c -lasound -lm
+	gcc -o piano main.c -lasound -lm
+
+clean:
+	rm -rf piano
