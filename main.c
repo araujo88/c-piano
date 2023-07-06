@@ -73,7 +73,9 @@ void *play_frequency(void *arg)
 
     for (int i = 0; i < size; i++)
     {
-        buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+        // buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+
+        buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE));
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
