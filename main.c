@@ -78,11 +78,7 @@ void *play_frequency(void *arg)
 
         // buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
 
-        buf[i] = 0;
-        for (int k = 1; k < 20; k++)
-        {
-            buf[i] += VOLUME * (2 / M_PI) * pow(-1, k) * sin(2 * M_PI * k * freq * ((float)i / SAMPLING_RATE)) / k;
-        }
+        buf[i] = VOLUME * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
