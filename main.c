@@ -40,6 +40,16 @@ struct note keyboard[] = {
 
 #define NUMBER_OF_NOTES (int)(sizeof(keyboard) / sizeof(struct note))
 
+int sign(double num)
+{
+    if (num > 0)
+        return 1;
+    else if (num < 0)
+        return -1;
+    else
+        return 0;
+}
+
 // Function to set terminal to raw mode
 void set_mode(int want_key)
 {
@@ -76,9 +86,13 @@ void *play_frequency(void *arg)
     {
         // buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // basic sine wave
 
-        // buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
+        buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
 
-        buf[i] = VOLUME * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
+        // buf[i] = VOLUME * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
+
+        // buf[i] = VOLUME * 2 * fabs(2 * (((float)i / SAMPLING_RATE * freq) - floor(0.5 + (float)i / SAMPLING_RATE * freq))) - 1; // triangle wave
+
+        // buf[i] = VOLUME * sign(sin((float)2 * M_PI * freq * i / SAMPLING_RATE)); // square wave
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
