@@ -8,6 +8,7 @@
 
 #define SAMPLING_RATE 44100
 #define VOLUME 10000
+#define RELEASE_TIME 1 // Release time in seconds
 
 typedef struct _params
 {
@@ -79,20 +80,28 @@ void *play_frequency(void *arg)
 
     snd_pcm_t *handle;
     snd_pcm_sframes_t frames;
-    int size = duration * SAMPLING_RATE;
+    int size = (duration + RELEASE_TIME) * SAMPLING_RATE; // Extend buffer for release
     short buf[size];
 
     for (int i = 0; i < size; i++)
     {
-        // buf[i] = VOLUME * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // basic sine wave
+        float volume = VOLUME;
 
-        buf[i] = VOLUME * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
+        // If in the release phase, scale volume based on how far into the release we are
+        if (i >= duration * SAMPLING_RATE)
+        {
+            volume *= 1.0 - (i - duration * SAMPLING_RATE) / (RELEASE_TIME * SAMPLING_RATE);
+        }
 
-        // buf[i] = VOLUME * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
+        // buf[i] = volume * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // basic sine wave
 
-        // buf[i] = VOLUME * 2 * fabs(2 * (((float)i / SAMPLING_RATE * freq) - floor(0.5 + (float)i / SAMPLING_RATE * freq))) - 1; // triangle wave
+        buf[i] = volume * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
 
-        // buf[i] = VOLUME * sign(sin((float)2 * M_PI * freq * i / SAMPLING_RATE)); // square wave
+        // buf[i] = volume * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
+
+        // buf[i] = volume * 2 * fabs(2 * (((float)i / SAMPLING_RATE * freq) - floor(0.5 + (float)i / SAMPLING_RATE * freq))) - 1; // triangle wave
+
+        // buf[i] = volume * sign(sin((float)2 * M_PI * freq * i / SAMPLING_RATE)); // square wave
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
