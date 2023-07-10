@@ -9,6 +9,7 @@
 #define SAMPLING_RATE 44100
 #define VOLUME 10000
 #define RELEASE_TIME 1 // Release time in seconds
+#define ATTACK_TIME 0  // Attack time in seconds
 
 typedef struct _params
 {
@@ -72,6 +73,39 @@ void set_mode(int want_key)
     tcsetattr(STDIN_FILENO, TCSANOW, &new);
 }
 
+short sine(int i, float volume, float freq)
+{
+    return volume * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+}
+
+short sawtooth(int i, float volume, float freq)
+{
+    return volume * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq));
+}
+
+short triangle(int i, float volume, float freq)
+{
+    return volume * 2 * fabs(2 * (((float)i / SAMPLING_RATE * freq) - floor(0.5 + (float)i / SAMPLING_RATE * freq))) - 1;
+}
+
+short square(int i, float volume, float freq)
+{
+    return volume * sign(sin((float)2 * M_PI * freq * i / SAMPLING_RATE));
+}
+
+short piano(int i, float volume, float freq)
+{
+    return volume * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE));
+}
+
+void release(int i, float duration, float *volume)
+{
+    if (i >= duration * SAMPLING_RATE)
+    {
+        *volume *= 1.0 - (i - duration * SAMPLING_RATE) / (RELEASE_TIME * SAMPLING_RATE);
+    }
+}
+
 void *play_frequency(void *arg)
 {
     params *args = (params *)arg;
@@ -86,22 +120,30 @@ void *play_frequency(void *arg)
     for (int i = 0; i < size; i++)
     {
         float volume = VOLUME;
+        buf[i] = 0;
 
-        // If in the release phase, scale volume based on how far into the release we are
-        if (i >= duration * SAMPLING_RATE)
+        if (i < ATTACK_TIME * SAMPLING_RATE)
+        {
+            volume = (i / (ATTACK_TIME * SAMPLING_RATE)) * VOLUME;
+        }
+        else if (i < duration * SAMPLING_RATE)
+        {
+            volume = VOLUME;
+        }
+        else
         {
             volume *= 1.0 - (i - duration * SAMPLING_RATE) / (RELEASE_TIME * SAMPLING_RATE);
         }
 
-        // buf[i] = volume * sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // basic sine wave
+        // buf[i] += sine(i, volume, freq);
 
-        buf[i] = volume * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE)); // piano wave
+        buf[i] += piano(i, volume, freq);
 
-        // buf[i] = volume * (2 / M_PI) * ((float)i / SAMPLING_RATE * freq - floor(0.5 + (float)i / SAMPLING_RATE * freq)); // sawtooth wave
+        // buf[i] += sawtooth(i, volume, freq);
 
-        // buf[i] = volume * 2 * fabs(2 * (((float)i / SAMPLING_RATE * freq) - floor(0.5 + (float)i / SAMPLING_RATE * freq))) - 1; // triangle wave
+        // buf[i] += triangle(i, volume, freq);
 
-        // buf[i] = volume * sign(sin((float)2 * M_PI * freq * i / SAMPLING_RATE)); // square wave
+        // buf[i] += square(i, volume, freq);
     }
 
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);

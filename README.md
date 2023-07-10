@@ -33,3 +33,17 @@ struct note keyboard[] = {
     {'k', 523.25}  // C5
 };
 ```
+
+# Features
+
+## Waveforms
+
+- sine
+- sawtooth
+- triangle
+- square
+
+## Effects
+
+- release
+- attack
