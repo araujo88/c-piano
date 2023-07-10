@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #define SAMPLING_RATE 44100
-#define VOLUME 10000
+#define VOLUME 10000 * 0.6
 #define RELEASE_TIME 1 // Release time in seconds
 #define ATTACK_TIME 0  // Attack time in seconds
 
@@ -25,19 +25,36 @@ struct note
 };
 
 struct note keyboard[] = {
-    {'a', 261.63, "C4"},  // C4
-    {'w', 277.18, "C#4"}, // C#4
-    {'s', 293.66, "D4"},  // D4
-    {'e', 311.13, "D#4"}, // D#4
-    {'d', 329.63, "E4"},  // E4
-    {'f', 349.23, "F4"},  // F4
-    {'t', 369.99, "F#4"}, // F#4
-    {'g', 392.00, "G4"},  // G4
-    {'y', 415.30, "G#4"}, // G#4
-    {'h', 440.00, "A4"},  // A4
-    {'u', 466.16, "A#4"}, // A#4
-    {'j', 493.88, "B4"},  // B4
-    {'k', 523.25, "C5"}   // C5
+    {'q', 261.63, "C4"},
+    {'2', 277.18, "C#4"},
+    {'w', 293.66, "D4"},
+    {'3', 311.13, "D#4"},
+    {'e', 329.63, "E4"},
+    {'r', 349.23, "F4"},
+    {'5', 369.99, "F#4"},
+    {'t', 392.00, "G4"},
+    {'6', 415.30, "G#4"},
+    {'y', 440.00, "A4"},
+    {'7', 466.16, "A#4"},
+    {'u', 493.88, "B4"},
+    {'i', 523.25, "C5"},
+    {'9', 554.37, "C#5"},
+    {'o', 587.34, "D5"},
+    {'0', 622.26, "D#5"},
+
+    {'z', 130.81, "C3"},
+    {'s', 138.59, "C#3"},
+    {'x', 146.83, "D3"},
+    {'d', 155.56, "D#3"},
+    {'c', 164.81, "E3"},
+    {'v', 174.61, "F3"},
+    {'g', 184.99, "F#3"},
+    {'b', 195.99, "G3"},
+    {'h', 207.65, "G#3"},
+    {'n', 219.99, "A3"},
+    {'j', 233.08, "A#3"},
+    {'m', 246.93, "B3"},
+    {',', 261.62, "C4"},
 };
 
 #define NUMBER_OF_NOTES (int)(sizeof(keyboard) / sizeof(struct note))
@@ -98,14 +115,6 @@ short piano(int i, float volume, float freq)
     return volume * pow(sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)), 3) + sin(2 * M_PI * freq * ((float)i / SAMPLING_RATE)) * exp(-0.1 * 2 * M_PI * freq * ((float)i / SAMPLING_RATE));
 }
 
-void release(int i, float duration, float *volume)
-{
-    if (i >= duration * SAMPLING_RATE)
-    {
-        *volume *= 1.0 - (i - duration * SAMPLING_RATE) / (RELEASE_TIME * SAMPLING_RATE);
-    }
-}
-
 void *play_frequency(void *arg)
 {
     params *args = (params *)arg;
@@ -138,6 +147,8 @@ void *play_frequency(void *arg)
         // buf[i] += sine(i, volume, freq);
 
         buf[i] += piano(i, volume, freq);
+
+        buf[i] += 0.25 * piano(i, volume, 2 * freq);
 
         // buf[i] += sawtooth(i, volume, freq);
 
