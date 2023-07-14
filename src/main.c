@@ -5,6 +5,7 @@
 #include <alsa/asoundlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include "../include/inih/ini.h"
 
 #define SAMPLING_RATE 44100
 #define VOLUME 10000 * 0.6
@@ -58,6 +59,47 @@ struct note keyboard[] = {
 };
 
 #define NUMBER_OF_NOTES (int)(sizeof(keyboard) / sizeof(struct note))
+
+typedef struct
+{
+    double sawtooth;
+    double piano;
+    double sine;
+    double triangle;
+    double square;
+} configuration;
+
+static int handler(void *user, const char *section, const char *name, const char *value)
+{
+    configuration *pconfig = (configuration *)user;
+
+#define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    if (MATCH("waveform", "sawtooth"))
+    {
+        pconfig->sawtooth = atof(value);
+    }
+    else if (MATCH("waveform", "piano"))
+    {
+        pconfig->piano = atof(value);
+    }
+    else if (MATCH("waveform", "sine"))
+    {
+        pconfig->sine = atof(value);
+    }
+    else if (MATCH("waveform", "triangle"))
+    {
+        pconfig->triangle = atof(value);
+    }
+    else if (MATCH("waveform", "square"))
+    {
+        pconfig->square = atof(value);
+    }
+    else
+    {
+        return 0; /* unknown section/name, error */
+    }
+    return 1;
+}
 
 int sign(double num)
 {
@@ -148,8 +190,6 @@ void *play_frequency(void *arg)
 
         buf[i] += piano(i, volume, freq);
 
-        buf[i] += 0.25 * piano(i, volume, 2 * freq);
-
         // buf[i] += sawtooth(i, volume, freq);
 
         // buf[i] += triangle(i, volume, freq);
@@ -183,6 +223,16 @@ int main()
     char key;
     params parameters;
     pthread_t t;
+
+    configuration config;
+
+    if (ini_parse("piano.ini", handler, &config) < 0)
+    {
+        printf("Can't load 'test.ini'\n");
+        return EXIT_FAILURE;
+    }
+    printf("Config loaded from 'piano.ini': piano=%lf, sawtooth=%lf, sine=%lf, square=%lf, triangle=%lf\n",
+           config.piano, config.sawtooth, config.sine, config.square, config.triangle);
 
     // Set the terminal to raw mode
     set_mode(1);

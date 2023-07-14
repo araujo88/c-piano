@@ -6,6 +6,14 @@ a simple piano programmed in C
 
 `sudo apt-get install libasound2 libasound2-dev`
 
+# Cloning
+
+`git clone --recurse-submodules https://github.com/your_project`
+
+# Updating
+
+`git submodule update --init`
+
 # Compiling
 
 `make`
