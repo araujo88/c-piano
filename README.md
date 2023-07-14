@@ -6,6 +6,10 @@ a simple piano programmed in C
 
 `sudo apt-get install libasound2 libasound2-dev`
 
+# External libraries
+
+- [inih](https://github.com/benhoyt/inih)
+
 # Cloning
 
 `git clone --recurse-submodules https://github.com/your_project`
