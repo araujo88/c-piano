@@ -12,7 +12,7 @@ a simple piano programmed in C
 
 # Cloning
 
-`git clone --recurse-submodules https://github.com/your_project`
+`git clone --recurse-submodules https://github.com/araujo88/c-piano`
 
 # Updating
 
