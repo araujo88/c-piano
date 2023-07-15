@@ -15,7 +15,7 @@ int main()
 
     if (ini_parse("piano.ini", handler, &config) < 0)
     {
-        printf("Can't load 'test.ini'\n");
+        printf("Can't load 'piano.ini'\n");
         return EXIT_FAILURE;
     }
     printf("Config loaded from 'piano.ini': sawtooth=%lf, sine=%lf, square=%lf, triangle=%lf, sampling_rate=%d\n",
